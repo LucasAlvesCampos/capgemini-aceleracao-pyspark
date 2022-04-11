@@ -38,64 +38,65 @@ def invoiceNo_qa(dataframe):
 						F.when(check_empty_column('InvoiceNo'), 'M')
 						 .when(F.col('InvoiceNo').startswith('C'), 'Canceled')
 						 .when(~F.col('InvoiceNo').rlike(REGEX_INVOICE_NO), 'F'))
-
-	dataframe.filter(F.col('qa_invoiceno')=='M').show()
-	dataframe.filter(F.col('qa_invoiceno')=='Canceled').show()
-	dataframe.filter(F.col('qa_invoiceno')=='F').show()
+	return dataframe
+	#dataframe.filter(F.col('qa_invoiceno')=='M').show()
+	#dataframe.filter(F.col('qa_invoiceno')=='Canceled').show()
+	#dataframe.filter(F.col('qa_invoiceno')=='F').show()
 
 def stockCode_qa(dataframe):
 	dataframe = dataframe.withColumn("qa_stockcode",
 						F.when(check_empty_column('StockCode'), 'M')
 						 .when(~F.col('StockCode').rlike(REGEX_STOCK_CODE), 'Nominal'))
-
-	dataframe.filter(F.col('qa_stockcode') == 'M').show()
-	dataframe.filter(F.col('qa_stockcode') == 'Nominal').show()
+	return dataframe
+	#dataframe.filter(F.col('qa_stockcode') == 'M').show()
+	#dataframe.filter(F.col('qa_stockcode') == 'Nominal').show()
 	
 def description_qa(dataframe):
 	dataframe = dataframe.withColumn("qa_description",
 						F.when(check_empty_column('Description'), 'M'))
-	
-	dataframe.filter(F.col('qa_description') == 'M').show()
+	return dataframe
+	#dataframe.filter(F.col('qa_description') == 'M').show()
 
 
 def quantity_qa(dataframe):
 	dataframe = dataframe.withColumn("qa_quantity",
 						F.when(check_empty_column('Quantity'), 'M')
 						 .when(~F.col('Quantity').rlike(REGEX_INTEGER), 'F'))
-
-	dataframe.filter(F.col('qa_quantity') == 'M').show()
-	dataframe.filter(F.col('qa_quantity') == 'F').show()
+	return dataframe
+	#dataframe.filter(F.col('qa_quantity') == 'M').show()
+	#dataframe.filter(F.col('qa_quantity') == 'F').show()
 	
 
 def invoicedate_qa(dataframe):
 	dataframe = dataframe.withColumn("qa_invoicedate",
 						F.when(check_empty_column('InvoiceDate'), 'M'))
-
-	dataframe.filter(F.col('qa_invoicedate') == 'M').show()
+	return dataframe
+	#dataframe.filter(F.col('qa_invoicedate') == 'M').show()
 	
 
 def unitprice_qa(dataframe):
 	dataframe = dataframe.withColumn("qa_unitprice",
 						F.when(check_empty_column('UnitPrice'), 'M')
 						 .when(~F.col('UnitPrice').rlike(REGEX_UNIT_PRICE), 'F'))
-
-	dataframe.filter(F.col('qa_unitprice') == 'M').show()
-	dataframe.filter(F.col('qa_unitprice') == 'F').show()
+	return dataframe
+	#dataframe.filter(F.col('qa_unitprice') == 'M').show()
+	#dataframe.filter(F.col('qa_unitprice') == 'F').show()
 	
 def customerid_qa(dataframe):
 	dataframe = dataframe.withColumn("qa_customerid",
 						F.when(check_empty_column('CustomerID'), 'M')
 						 .when(~F.col('CustomerID').rlike(REGEX_CUSTOMER_ID), 'F'))
+	return dataframe
     
-	dataframe.filter(F.col('qa_customerid') == 'M').show()
-	dataframe.filter(F.col('qa_customerid') == 'F').show()
+	#dataframe.filter(F.col('qa_customerid') == 'M').show()
+	#dataframe.filter(F.col('qa_customerid') == 'F').show()
 
 
 def country_qa(dataframe):
 	dataframe = dataframe.withColumn("qa_country",
 						F.when(check_empty_column('Country'), 'M'))
-
-	dataframe.filter(F.col('qa_country') == 'M').show()
+	return dataframe
+	#dataframe.filter(F.col('qa_country') == 'M').show()
 
 if __name__ == "__main__":
 	sc = SparkContext()
@@ -107,11 +108,13 @@ if __name__ == "__main__":
 		          #.schema(schema_online_retail)
 		          .load("/home/spark/capgemini-aceleracao-pyspark/data/online-retail/online-retail.csv"))
 	
-	#invoiceNo_qa(df)
-	#stockCode_qa(df)
-	#description_qa(df)
-	#quantity_qa(df)
-	#invoicedate_qa(df)
-	#unitprice_qa(df)
-	#customerid_qa(df)
-	country_qa(df)
+	df = invoiceNo_qa(df)
+	df = stockCode_qa(df)
+	df = description_qa(df)
+	df = quantity_qa(df)
+	df = invoicedate_qa(df)
+	df = unitprice_qa(df)
+	df = customerid_qa(df)
+	df = country_qa(df)
+
+	df.toPandas()
