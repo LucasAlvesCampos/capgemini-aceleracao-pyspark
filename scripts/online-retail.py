@@ -42,6 +42,7 @@ def invoiceNo_qa(dataframe):
 	#dataframe.filter(F.col('qa_invoiceno')=='M').show()
 	#dataframe.filter(F.col('qa_invoiceno')=='Canceled').show()
 	#dataframe.filter(F.col('qa_invoiceno')=='F').show()
+	#dataframe.filter(F.col('qa_invoiceno').isNull()).show()
 
 def stockCode_qa(dataframe):
 	dataframe = dataframe.withColumn("qa_stockcode",
@@ -62,6 +63,7 @@ def quantity_qa(dataframe):
 	dataframe = dataframe.withColumn("qa_quantity",
 						F.when(check_empty_column('Quantity'), 'M')
 						 .when(~F.col('Quantity').rlike(REGEX_INTEGER), 'F'))
+	
 	return dataframe
 	#dataframe.filter(F.col('qa_quantity') == 'M').show()
 	#dataframe.filter(F.col('qa_quantity') == 'F').show()
@@ -98,6 +100,14 @@ def country_qa(dataframe):
 	return dataframe
 	#dataframe.filter(F.col('qa_country') == 'M').show()
 
+def transform_unitprice(dataframe):
+	dataframe = dataframe.withColumn('UnitPrice', F.regexp_replace(F.col('UnitPrice'), ',', "."))
+	
+	return dataframe
+
+
+
+
 if __name__ == "__main__":
 	sc = SparkContext()
 	spark = (SparkSession.builder.appName("Aceleração PySpark - Capgemini [Online Retail]"))
@@ -117,4 +127,12 @@ if __name__ == "__main__":
 	df = customerid_qa(df)
 	df = country_qa(df)
 
-	df.toPandas()
+	df = transform_unitprice(df)
+
+
+#Pergunta 1
+
+	(df.filter((F.col("StockCode").startswith("gift_0001")) & (F.col("qa_invoiceno").isNull()))
+	                              .agg(F.sum(F.col('UnitPrice')))
+								  .show(100))
+
