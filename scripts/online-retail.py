@@ -168,7 +168,7 @@ pergunta_2(df)
 def pergunta_3(df):
 	(df.filter((F.col("StockCode") == ("S")) & (F.col("qa_invoiceno").isNull()))
                               .groupBy('StockCode')
-							  .agg(F.round(F.sum(F.col('UnitPrice')), 2).alias('Valor Total de Vendas'))
+							  .agg(F.round(F.sum(F.col('UnitPrice') * F.col('Quantity')), 2).alias('Valor Total de Vendas'))
 							  .orderBy(F.col('Valor Total de Vendas').desc())
 							  .show())
 
@@ -190,13 +190,23 @@ pergunta_4(df)
 
 # Ainda nao consegui
 def pergunta_5(df):
-	df = (df.groupBy('StockCode','month').count()
-									     .orderBy(F.col('count').desc()))	
+	df = df.withColumn('month', F.date_format(F.col("InvoiceDate"), "MM"))
 
-	df = df.groupBy('month').agg(F.max(F.struct('count', 'StockCode'))
-							.show())
+	df = (df.filter(F.col('qa_invoiceno').isNull())
+	                                     .groupBy('StockCode','month')
+										 .agg(F.sum(F.col('Quantity')))										 
+									     .orderBy(F.col('sum(Quantity)').desc()))	
 	
-#pergunta_5(df)
+	df_max_per_month = df.groupBy('month').max('sum(Quantity)')
+
+	df_max_per_month = df_max_per_month.join(df.alias('b'), 
+								F.col('b.sum(Quantity)') == F.col('max(sum(Quantity))'),
+								"left").select('b.month','StockCode','sum(Quantity)')
+
+	df_max_per_month.orderBy('month').show()
+
+
+pergunta_5(df)
 
 
 # Pergunta 6
