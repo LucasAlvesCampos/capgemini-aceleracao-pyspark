@@ -141,59 +141,85 @@ df = transform_invoicedate(df)
 
 # Pergunta 1
 
-(df.filter((F.col("StockCode").startswith("gift_0001")) & (F.col("qa_invoiceno").isNull()))
-								.agg(F.sum(F.col('UnitPrice') * F.col('Quantity')).alias('Valor Total de Vendas'))
+def pergunta_1(df):
+	(df.filter((F.col("StockCode").startswith("gift_0001")) & (F.col("qa_invoiceno").isNull()))
+								.agg(F.round(F.sum(F.col('UnitPrice') * F.col('Quantity')), 2).alias('Valor Total de Vendas'))
 								.show(100))
+
+
+pergunta_1(df)
 
 # Pergunta 2
 
-df = df.withColumn('month', F.date_format(F.col("InvoiceDate"), "MM"))
+def pergunta_2(df):
+	df = df.withColumn('month', F.date_format(F.col("InvoiceDate"), "MM"))
 
-(df.filter((F.col("StockCode").startswith("gift_0001")) & (F.col("qa_invoiceno").isNull()))
+	(df.filter((F.col("StockCode").startswith("gift_0001")) & (F.col("qa_invoiceno").isNull()))
 								.groupBy('month')
-								.agg(F.sum(F.col('UnitPrice') * F.col('Quantity')).alias('Valor Total de Vendas por mes'))
+								.agg(F.round(F.sum(F.col('UnitPrice') * F.col('Quantity')), 2).alias('Valor Total de Vendas por mes'))
 								.orderBy(F.col('month'))
 								.show())
 
+pergunta_2(df)
+
+
 # Pergunta 3
 
-(df.filter((F.col("StockCode") == ("S")) & (F.col("qa_invoiceno").isNull()))
+def pergunta_3(df):
+	(df.filter((F.col("StockCode") == ("S")) & (F.col("qa_invoiceno").isNull()))
                               .groupBy('StockCode')
-							  .agg(F.sum(F.col('UnitPrice')).alias('Valor Total de Vendas'))
+							  .agg(F.round(F.sum(F.col('UnitPrice')), 2).alias('Valor Total de Vendas'))
 							  .orderBy(F.col('Valor Total de Vendas').desc())
 							  .show())
- 
+
+pergunta_3(df)
+
+
  # Pergunta 4
 
-(df.groupBy("StockCode").count()                        
-						.orderBy(F.col('count').desc())
+def pergunta_4(df):
+	(df.filter(F.col('qa_invoiceno').isNull())
+                        .groupBy("Description").agg(F.sum(F.col('Quantity')))                      
+						.orderBy(F.col('sum(Quantity)').desc())
 						.show(1))
+
+
+pergunta_4(df)
 
 # Pergunta 5
 
 # Ainda nao consegui
 def pergunta_5(df):
 	df = (df.groupBy('StockCode','month').count()
-									.orderBy(F.col('count').desc()))	
+									     .orderBy(F.col('count').desc()))	
+
 	df = df.groupBy('month').agg(F.max(F.struct('count', 'StockCode'))
 							.show())
 	
-pergunta_5(df)
+#pergunta_5(df)
+
+
 # Pergunta 6
 
-df = df.withColumn('hour', F.date_format(F.col("InvoiceDate"), "HH"))
+def pergunta_6(df):
+	df = df.withColumn('hour', F.date_format(F.col("InvoiceDate"), "HH"))
 
-(df.filter(F.col("qa_invoiceno").isNull())
-								.groupBy('hour')
-								.agg(F.sum(F.col('UnitPrice') * F.col('Quantity')).alias('Valor Total de Vendas por Hora'))
-								.orderBy(F.col('Valor Total de Vendas por Hora').desc())
-								.show(1))
+	(df.filter(F.col("qa_invoiceno").isNull())
+									.groupBy('hour')
+									.agg(F.round(F.sum(F.col('UnitPrice') * F.col('Quantity')), 2).alias('Valor Total de Vendas por Hora'))
+									.orderBy(F.col('Valor Total de Vendas por Hora').desc())
+									.show(1))
+pergunta_6(df)
 
 # Pergunta 7
 
-(df.filter(F.col("qa_invoiceno").isNull())
+def pergunta_7(df):
+	df = df.withColumn('month', F.date_format(F.col("InvoiceDate"), "MM"))
+
+	(df.filter(F.col("qa_invoiceno").isNull())
 								.groupBy('month')
-								.agg(F.sum(F.col('UnitPrice') * F.col('Quantity')).alias('Valor Total de Vendas por Mes'))
+								.agg(F.round(F.sum(F.col('UnitPrice') * F.col('Quantity')), 2).alias('Valor Total de Vendas por Mes'))
 								.orderBy(F.col('Valor Total de Vendas por Mes').desc())
 								.show(1))
 
+pergunta_7(df)
