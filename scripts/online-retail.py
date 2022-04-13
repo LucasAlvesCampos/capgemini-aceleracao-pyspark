@@ -29,9 +29,13 @@ REGEX_INVOICE_NO = r'^[0-9]{6}$'
 REGEX_UNIT_PRICE = r'^[0-9]*,[0-9]+$|^[0-9]*$'
 REGEX_CUSTOMER_ID = r'^[0-9]{5}$'
 
+# Funcoes auxiliares
+
 def check_empty_column(col):
     return (F.col(col).isNull() | (F.col(col) == ''))
 
+
+# Qualidade
 
 def invoiceNo_qa(dataframe):
 	dataframe = dataframe.withColumn("qa_invoiceno",
@@ -100,12 +104,17 @@ def country_qa(dataframe):
 	return dataframe
 	#dataframe.filter(F.col('qa_country') == 'M').show()
 
+
+# Transformacoes
+
 def transform_unitprice(dataframe):
-	dataframe = dataframe.withColumn('UnitPrice', F.regexp_replace(F.col('UnitPrice'), ',', "."))
-	
+	dataframe = dataframe.withColumn('UnitPrice', F.regexp_replace(F.col('UnitPrice'), ',', ".").cast('float'))	
 	return dataframe
 
-
+def transform_invoicedate(dataframe):	
+	dataframe = dataframe.withColumn('InvoiceDate', F.concat(F.col('InvoiceDate'),F.lit(':00')))
+	dataframe = dataframe.withColumn("InvoiceDate", F.from_unixtime(F.unix_timestamp(F.col("InvoiceDate"),'d/M/yyyy HH:mm:ss'),'yyyy-MM-dd HH:mm:ss').cast('timestamp'))  
+	return dataframe
 
 
 if __name__ == "__main__":
@@ -118,21 +127,73 @@ if __name__ == "__main__":
 		          #.schema(schema_online_retail)
 		          .load("/home/spark/capgemini-aceleracao-pyspark/data/online-retail/online-retail.csv"))
 	
-	df = invoiceNo_qa(df)
-	df = stockCode_qa(df)
-	df = description_qa(df)
-	df = quantity_qa(df)
-	df = invoicedate_qa(df)
-	df = unitprice_qa(df)
-	df = customerid_qa(df)
-	df = country_qa(df)
+df = invoiceNo_qa(df)
+df = stockCode_qa(df)
+df = description_qa(df)
+df = quantity_qa(df)
+df = invoicedate_qa(df)
+df = unitprice_qa(df)
+df = customerid_qa(df)
+df = country_qa(df)
 
-	df = transform_unitprice(df)
+df = transform_unitprice(df)
+df = transform_invoicedate(df)
 
+# Pergunta 1
 
-#Pergunta 1
+(df.filter((F.col("StockCode").startswith("gift_0001")) & (F.col("qa_invoiceno").isNull()))
+								.agg(F.sum(F.col('UnitPrice') * F.col('Quantity')).alias('Valor Total de Vendas'))
+								.show(100))
 
-	(df.filter((F.col("StockCode").startswith("gift_0001")) & (F.col("qa_invoiceno").isNull()))
-	                              .agg(F.sum(F.col('UnitPrice')))
-								  .show(100))
+# Pergunta 2
+
+df = df.withColumn('month', F.date_format(F.col("InvoiceDate"), "MM"))
+
+(df.filter((F.col("StockCode").startswith("gift_0001")) & (F.col("qa_invoiceno").isNull()))
+								.groupBy('month')
+								.agg(F.sum(F.col('UnitPrice') * F.col('Quantity')).alias('Valor Total de Vendas por mes'))
+								.orderBy(F.col('month'))
+								.show())
+
+# Pergunta 3
+
+(df.filter((F.col("StockCode") == ("S")) & (F.col("qa_invoiceno").isNull()))
+                              .groupBy('StockCode')
+							  .agg(F.sum(F.col('UnitPrice')).alias('Valor Total de Vendas'))
+							  .orderBy(F.col('Valor Total de Vendas').desc())
+							  .show())
+ 
+ # Pergunta 4
+
+(df.groupBy("StockCode").count()                        
+						.orderBy(F.col('count').desc())
+						.show(1))
+
+# Pergunta 5
+
+# Ainda nao consegui
+def pergunta_5(df):
+	df = (df.groupBy('StockCode','month').count()
+									.orderBy(F.col('count').desc()))	
+	df = df.groupBy('month').agg(F.max(F.struct('count', 'StockCode'))
+							.show())
+	
+pergunta_5(df)
+# Pergunta 6
+
+df = df.withColumn('hour', F.date_format(F.col("InvoiceDate"), "HH"))
+
+(df.filter(F.col("qa_invoiceno").isNull())
+								.groupBy('hour')
+								.agg(F.sum(F.col('UnitPrice') * F.col('Quantity')).alias('Valor Total de Vendas por Hora'))
+								.orderBy(F.col('Valor Total de Vendas por Hora').desc())
+								.show(1))
+
+# Pergunta 7
+
+(df.filter(F.col("qa_invoiceno").isNull())
+								.groupBy('month')
+								.agg(F.sum(F.col('UnitPrice') * F.col('Quantity')).alias('Valor Total de Vendas por Mes'))
+								.orderBy(F.col('Valor Total de Vendas por Mes').desc())
+								.show(1))
 
