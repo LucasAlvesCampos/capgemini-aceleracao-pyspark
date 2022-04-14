@@ -126,7 +126,8 @@ if __name__ == "__main__":
 		          .option("header", "true")
 		          #.schema(schema_online_retail)
 		          .load("/home/spark/capgemini-aceleracao-pyspark/data/online-retail/online-retail.csv"))
-	
+
+# Qualidade	
 df = invoiceNo_qa(df)
 df = stockCode_qa(df)
 df = description_qa(df)
@@ -136,6 +137,7 @@ df = unitprice_qa(df)
 df = customerid_qa(df)
 df = country_qa(df)
 
+# Transformacao
 df = transform_unitprice(df)
 df = transform_invoicedate(df)
 
@@ -147,7 +149,7 @@ def pergunta_1(df):
 								.show(100))
 
 
-pergunta_1(df)
+#pergunta_1(df)
 
 # Pergunta 2
 
@@ -160,7 +162,7 @@ def pergunta_2(df):
 								.orderBy(F.col('month'))
 								.show())
 
-pergunta_2(df)
+#pergunta_2(df)
 
 
 # Pergunta 3
@@ -172,7 +174,7 @@ def pergunta_3(df):
 							  .orderBy(F.col('Valor Total de Vendas').desc())
 							  .show())
 
-pergunta_3(df)
+#pergunta_3(df)
 
 
  # Pergunta 4
@@ -184,7 +186,7 @@ def pergunta_4(df):
 						.show(1))
 
 
-pergunta_4(df)
+#pergunta_4(df)
 
 # Pergunta 5
 
@@ -206,7 +208,7 @@ def pergunta_5(df):
 	df_max_per_month.orderBy('month').show()
 
 
-pergunta_5(df)
+#pergunta_5(df)
 
 
 # Pergunta 6
@@ -219,7 +221,7 @@ def pergunta_6(df):
 									.agg(F.round(F.sum(F.col('UnitPrice') * F.col('Quantity')), 2).alias('Valor Total de Vendas por Hora'))
 									.orderBy(F.col('Valor Total de Vendas por Hora').desc())
 									.show(1))
-pergunta_6(df)
+#pergunta_6(df)
 
 # Pergunta 7
 
@@ -232,4 +234,73 @@ def pergunta_7(df):
 								.orderBy(F.col('Valor Total de Vendas por Mes').desc())
 								.show(1))
 
-pergunta_7(df)
+#pergunta_7(df)
+
+# Pergunta 8
+
+def pergunta_8(df):
+	df = df.withColumn('month', F.date_format(F.col("InvoiceDate"), "MM"))
+
+	df = (df.filter(F.col('qa_invoiceno').isNull())
+	                                     .groupBy('StockCode','month')
+										 .agg(F.round(F.sum(F.col('Quantity') * F.col('UnitPrice')), 2).alias('Valor de vendas'))										 
+									     .orderBy(F.col('Valor de vendas').desc()))	
+	
+	df_max_per_month = df.groupBy('month').max('Valor de vendas')
+
+	df_max_per_month = df_max_per_month.join(df.alias('b'), 
+								F.col('b.Valor de vendas') == F.col('max(Valor de vendas)'),
+								"left").select('b.month','StockCode','Valor de vendas')
+
+	df_max_per_month.orderBy('month').show()
+
+#pergunta_8(df)
+
+
+# Pergunta 9
+
+def pergunta_9(df):
+	df = (df.filter((F.col('qa_invoiceno').isNull()) & (F.col('StockCode') != 'PADS'))
+	                                     .groupBy('Country')
+										 .agg(F.round(F.sum(F.col('Quantity') * F.col('UnitPrice')), 2).alias('Valor de vendas'))										 
+									     .orderBy(F.col('Valor de vendas').desc()).show(1))
+#pergunta_9(df)
+
+# Pergunta 10
+
+def pergunta_10(df):
+	df = (df.filter((F.col('qa_invoiceno').isNull()) & (F.col('StockCode') == 'M'))
+	                                     .groupBy('Country')
+										 .agg(F.round(F.sum(F.col('Quantity') * F.col('UnitPrice')), 2).alias('Valor de vendas'))										 
+									     .orderBy(F.col('Valor de vendas').desc()).show(1))
+
+#pergunta_10(df)
+
+# Pergunta 11
+
+def pergunta_11(df):
+	df = (df.filter(F.col('qa_invoiceno').isNull())
+	                                     .groupBy('InvoiceNo')
+										 .agg(F.round(F.sum(F.col('Quantity') * F.col('UnitPrice')), 2).alias('Valor de vendas'))										 
+									     .orderBy(F.col('Valor de vendas').desc()).show(1))
+#pergunta_11(df)
+
+# Pergunta 12
+
+def pergunta_12(df):
+	df = (df.filter(F.col('qa_invoiceno').isNull())
+	                                     .groupBy('InvoiceNo')
+										 .agg(F.round(F.sum(F.col('Quantity')), 2).alias('Numero de itens'))										 
+									     .orderBy(F.col('Numero de itens').desc()).show(1))
+
+#pergunta_12(df)
+
+# Pergunta 13
+
+def pergunta_13(df):
+	df = (df.filter(F.col('qa_invoiceno').isNull())
+	                                     .groupBy('CustomerID')
+										 .agg(F.count(F.col('CustomerID')).alias('Numero de compras'))										 
+									     .orderBy(F.col('Numero de compras').desc()).show(1))
+
+#pergunta_13(df)
