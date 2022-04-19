@@ -137,45 +137,85 @@ schema_communities_crime = StructType([
 
 def pergunta_1(df):
 	(df.where(F.col('PolicOperBudg').isNotNull())
-	   .groupBy(F.col('communityname'))
+	   .groupBy(F.col('state'),F.col('communityname'))
 	   .agg(F.round(F.sum(F.col('PolicOperBudg')),2).alias('orcamento policial'))
 	   .orderBy(F.col('orcamento policial').desc())
 	   .show())
 
 def pergunta_2(df):
 	(df.where(F.col('ViolentCrimesPerPop').isNotNull())
-	   .groupBy(F.col('communityname'))
+	   .groupBy(F.col('state'),F.col('communityname'))
 	   .agg(F.round(F.sum(F.col('ViolentCrimesPerPop')),2).alias('crimes violentos'))
 	   .orderBy(F.col('crimes violentos').desc())
 	   .show())
 
 def pergunta_3(df):
 	(df.where(F.col('population').isNotNull())
-	   .groupBy(F.col('communityname'))
+	   .groupBy(F.col('state'),F.col('communityname'))
 	   .agg(F.round(F.sum(F.col('population')),2).alias('Populacao'))
 	   .orderBy(F.col('Populacao').desc())
 	   .show())
 
 def pergunta_4(df):
 	(df.where(F.col('racepctblack').isNotNull())
-	   .groupBy(F.col('communityname'))
+	   .groupBy(F.col('state'),F.col('communityname'))
 	   .agg(F.round(F.sum(F.col('racepctblack')),2).alias('Populacao Negra'))
 	   .orderBy(F.col('Populacao Negra').desc())
 	   .show())
 
 def pergunta_5(df):
 	(df.where(F.col('pctWWage').isNotNull())
-	   .groupBy(F.col('communityname'))
+	   .groupBy(F.col('state'),F.col('communityname'))
 	   .agg(F.round(F.sum(F.col('pctWWage')),2).alias('assalariado'))
 	   .orderBy(F.col('assalariado').desc())
 	   .show())
 
 def pergunta_6(df):
 	(df.where(F.col('agePct12t21').isNotNull())
-	   .groupBy(F.col('communityname'))
+	   .groupBy(F.col('state'),F.col('communityname'))
 	   .agg(F.round(F.sum(F.col('agePct12t21')),2).alias('Populacao Jovem'))
 	   .orderBy(F.col('Populacao Jovem').desc())
 	   .show())
+
+def pergunta_7(df):
+	df1 = df.where((F.col('PolicOperBudg').isNotNull()) & (F.col('ViolentCrimesPerPop').isNotNull()))
+	print(df1.corr('PolicOperBudg','ViolentCrimesPerPop'))
+
+def pergunta_8(df):
+	df1 = df.where((F.col('PctPolicWhite').isNotNull()) & (F.col('PolicOperBudg').isNotNull()))
+	print(df1.corr('PctPolicWhite','PolicOperBudg'))
+
+def pergunta_9(df):
+	df1 = df.where((F.col('population').isNotNull()) & (F.col('PolicOperBudg').isNotNull()))
+	print(df1.corr('population','PolicOperBudg'))
+
+def pergunta_10(df):
+	df1 = df.where((F.col('population').isNotNull()) & (F.col('ViolentCrimesPerPop').isNotNull()))
+	print(df1.corr('population','ViolentCrimesPerPop'))
+
+def pergunta_11(df):
+	df1 = df.where((F.col('medFamInc').isNotNull()) & (F.col('ViolentCrimesPerPop').isNotNull()))
+	print(df1.corr('medFamInc','ViolentCrimesPerPop'))
+
+def pergunta_12(df):
+	df1 = (df.where(F.col('ViolentCrimesPerPop').isNotNull())
+	   .groupBy(F.col('state'),F.col('communityname'))
+	   .agg(F.round(F.sum(F.col('ViolentCrimesPerPop')),2).alias('crimes violentos'), F.sum('racePctWhite').alias('White'), F.sum('racepctblack').alias('Black'),
+	    F.sum('racePctAsian').alias('Asian'), F.sum('racePctHisp').alias('Hisp'))	   
+	   .orderBy(F.col('crimes violentos').desc()))
+	
+	compare_columns = ['White', 'Black','Asian', 'Hisp']
+	cond = "F.when" + ".when".join(["(F.col('" + c + "') == F.col('Maior Valor'), F.lit('" + c + "'))" for c in compare_columns])
+	
+	df1 = df1.withColumn("Maior Valor", F.greatest(*compare_columns))\
+    .withColumn("Raca que mais aparece", eval(cond))
+
+	df1 = df1.drop('White', 'Black', 'Asian', 'Hisp', 'Maior Valor')
+
+	df1.show(10)
+    
+	#df2 = df1.withColumn('maior', F.greatest(F.col('sum(whitePerCap)'), 'sum(blackPerCap)',  'sum(indianPerCap)', 'sum(AsianPerCap)', 'sum(HispPerCap)', 'sum(OtherPerCap)')).show()
+	
 
 if __name__ == "__main__":
 	sc = SparkContext()
@@ -187,9 +227,15 @@ if __name__ == "__main__":
 		          .schema(schema_communities_crime)
 		          .load("/home/spark/capgemini-aceleracao-pyspark/data/communities-crime/communities-crime.csv"))
 	
-	#pergunta_1(df)
-	#pergunta_2(df)
-	#pergunta_3(df)
-	#pergunta_4(df)
-	#pergunta_5(df)
+	pergunta_1(df)
+	pergunta_2(df)
+	pergunta_3(df)
+	pergunta_4(df)
+	pergunta_5(df)
 	pergunta_6(df)
+	pergunta_7(df)
+	pergunta_8(df)
+	pergunta_9(df)
+	pergunta_10(df)
+	pergunta_11(df)
+	pergunta_12(df)
