@@ -160,9 +160,9 @@ def pergunta_4(df):
 	   .show())
 
 def pergunta_5(df):
-	(df.where(F.col('perCapInc').isNotNull())
-	   .select(F.col('state'),F.col('communityname'),F.col('perCapInc'))
-	   .orderBy(F.col('perCapInc').desc())
+	(df.where(F.col('PctEmploy').isNotNull())
+	   .select(F.col('state'),F.col('communityname'),F.col('PctEmploy'))
+	   .orderBy(F.col('PctEmploy').desc())
 	   .show())
 
 def pergunta_6(df):
