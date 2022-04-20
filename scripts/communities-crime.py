@@ -137,44 +137,38 @@ schema_communities_crime = StructType([
 
 def pergunta_1(df):
 	(df.where(F.col('PolicOperBudg').isNotNull())
-	   .groupBy(F.col('state'),F.col('communityname'))
-	   .agg(F.round(F.sum(F.col('PolicOperBudg')),2).alias('orcamento policial'))
-	   .orderBy(F.col('orcamento policial').desc())
+	   .select(F.col('state'),F.col('communityname'), F.col('PolicOperBudg'))	   
+	   .orderBy(F.col('PolicOperBudg').desc())
 	   .show())
 
 def pergunta_2(df):
 	(df.where(F.col('ViolentCrimesPerPop').isNotNull())
-	   .groupBy(F.col('state'),F.col('communityname'))
-	   .agg(F.round(F.sum(F.col('ViolentCrimesPerPop')),2).alias('crimes violentos'))
-	   .orderBy(F.col('crimes violentos').desc())
+	   .select(F.col('state'),F.col('communityname'),F.col('ViolentCrimesPerPop'))
+	   .orderBy(F.col('ViolentCrimesPerPop').desc())
 	   .show())
 
 def pergunta_3(df):
 	(df.where(F.col('population').isNotNull())
-	   .groupBy(F.col('state'),F.col('communityname'))
-	   .agg(F.round(F.sum(F.col('population')),2).alias('Populacao'))
-	   .orderBy(F.col('Populacao').desc())
+	   .select(F.col('state'),F.col('communityname'),F.col('population'))
+	   .orderBy(F.col('population').desc())
 	   .show())
 
 def pergunta_4(df):
 	(df.where(F.col('racepctblack').isNotNull())
-	   .groupBy(F.col('state'),F.col('communityname'))
-	   .agg(F.round(F.sum(F.col('racepctblack')),2).alias('Populacao Negra'))
-	   .orderBy(F.col('Populacao Negra').desc())
+	   .select(F.col('state'),F.col('communityname'),F.col('racepctblack'))
+	   .orderBy(F.col('racepctblack').desc())
 	   .show())
 
 def pergunta_5(df):
-	(df.where(F.col('pctWWage').isNotNull())
-	   .groupBy(F.col('state'),F.col('communityname'))
-	   .agg(F.round(F.sum(F.col('pctWWage')),2).alias('assalariado'))
-	   .orderBy(F.col('assalariado').desc())
+	(df.where(F.col('perCapInc').isNotNull())
+	   .select(F.col('state'),F.col('communityname'),F.col('perCapInc'))
+	   .orderBy(F.col('perCapInc').desc())
 	   .show())
 
 def pergunta_6(df):
 	(df.where(F.col('agePct12t21').isNotNull())
-	   .groupBy(F.col('state'),F.col('communityname'))
-	   .agg(F.round(F.sum(F.col('agePct12t21')),2).alias('Populacao Jovem'))
-	   .orderBy(F.col('Populacao Jovem').desc())
+	   .select(F.col('state'),F.col('communityname'),F.col('agePct12t21'))
+	   .orderBy(F.col('agePct12t21').desc())
 	   .show())
 
 def pergunta_7(df):
@@ -212,9 +206,7 @@ def pergunta_12(df):
 
 	df1 = df1.drop('White', 'Black', 'Asian', 'Hisp', 'Maior Valor')
 
-	df1.show(10)
-    
-	#df2 = df1.withColumn('maior', F.greatest(F.col('sum(whitePerCap)'), 'sum(blackPerCap)',  'sum(indianPerCap)', 'sum(AsianPerCap)', 'sum(HispPerCap)', 'sum(OtherPerCap)')).show()
+	df1.show(10)	
 	
 
 if __name__ == "__main__":
@@ -225,7 +217,7 @@ if __name__ == "__main__":
 		          .format("csv")
 		          .option("header", "true")
 		          .schema(schema_communities_crime)
-		          .load("/home/spark/capgemini-aceleracao-pyspark/data/communities-crime/communities-crime.csv"))
+		          .load("data/communities-crime/communities-crime.csv"))
 	
 	pergunta_1(df)
 	pergunta_2(df)
