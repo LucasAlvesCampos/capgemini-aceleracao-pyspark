@@ -117,13 +117,57 @@ def question_11(df):
 
 	df = df.withColumn('marital-status',
 	  F.when(~F.col('marital-status').contains('Married'), "Unmarried")
-	   .otherwise(F.col('marital-status')))
+	   .otherwise('Married'))
 
-	df = (df.where(F.col('marital-status') == 'Unmarried')
+	(df.where(F.col('marital-status') == 'Unmarried')
        .groupBy('marital-status', 'race')
        .count()
        .orderBy(F.col('count').desc())       
        .show(1))
+
+def question_12(df):
+	
+	df = df.withColumn('marital-status',
+	  F.when(~F.col('marital-status').contains('Married'), "Unmarried")
+	   .otherwise('Married'))
+
+	(df.groupBy('marital-status', 'income')
+       .count()
+       .orderBy(F.col('count').desc())
+       .dropDuplicates(['marital-status'])
+       .show())
+
+def question_13(df):
+	(df.groupBy('sex', 'income')
+       .count()
+       .orderBy(F.col('count').desc())
+       .dropDuplicates(['sex'])
+       .show())
+
+def question_14(df):
+	df = (df.withColumn('native-country',
+	              F.when(F.col('native-country').rlike("\?"), None)
+				  .otherwise(F.col('native-country'))))
+
+	(df.where(F.col('native-country').isNotNull())
+       .groupBy('native-country', 'income')
+       .count()
+       .orderBy(F.col('count').desc())
+       .dropDuplicates(['native-country'])
+	   .show())
+
+def question_15(df):
+	df = df.withColumn('race',
+	  F.when(~F.col('race').contains('White'), "Non-white")
+	   .otherwise('White'))
+
+	brancos = df.where(F.col('race') == 'White').count()
+	nao_brancos = df.where(F.col('race') == 'Non-white').count()
+	
+	print(f"O numero total e: {(df.where(F.col('race').isNotNull()).count())}")
+	print(f"O numero de brancos e: {brancos}")
+	print(f"O numero de nao brancos e: {nao_brancos}")
+	print(f"A proporcao e de: {brancos/nao_brancos} brancos para nao brancos")
 
 
 if __name__ == "__main__":
@@ -147,3 +191,7 @@ if __name__ == "__main__":
 	#question_9(df)
 	#question_10(df)
 	#question_11(df)
+	#question_12(df)
+	#question_13(df)
+	#question_14(df)
+	question_15(df)
